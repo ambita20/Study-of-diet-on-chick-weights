@@ -1,0 +1,62 @@
+library(tidyr)
+ChickWeight
+head(ChickWeight)
+#ECDF
+plot(ecdf(ChickWeight$weight))
+
+library(bootstrap)
+data1=ChickWeight$weight
+theta <- function(x){ 
+  mean(x)
+  
+}
+
+results <- bootstrap(x=data1,3200,theta)
+th.hat=mean(data1)#theta hat
+Tboot<-results$thetastar#vector of bootstrap results
+se.boot <- sqrt(var(Tboot))
+CI.normal<-c(th.hat-2*se.boot, th.hat+2*se.boot)
+
+
+##Pivotal
+CI.pivotal<-2*th.hat-quantile(Tboot,probs = c(0.975, 0.025))
+
+
+#Quantile
+CI.quantile<-quantile(Tboot,probs = c(0.025, 0.975) )
+
+
+hist(Tboot,probability = T)
+
+#MLE and asymptotic distributions
+n<-length(data1)
+mean.mle<-mean(data1)
+sigma_hat<-sqrt((1/n)*sum((data1-mean(data1))^2))
+data.norm<-rnorm(100,mean.mle,sigma_hat)
+hist(data.norm)
+
+
+
+#Hypothesis testing using Wald test
+diet.1<-dplyr::filter(ChickWeight, Diet==1)
+diet.2<-dplyr::filter(ChickWeight, Diet==2)
+mean.diet.1<- mean(diet.1$weight)
+mean.diet.2<- mean(diet.2$weight)
+sd.diet.1<-sd(diet.1$weight)
+sd.diet.2<-sd(diet.2$weight)
+z<-(mean.diet.1-mean.diet.2)/sqrt(((sd.diet.1^2)/length(diet.1$weight))+((sd.diet.2^2)/length(diet.2$weight)))
+c<-qnorm(0.975)     
+hyp<-abs(z)>c
+#We reject the null hypotheses
+diff<-mean.diet.1-mean.diet.2
+se.hat<-sqrt(((sd.diet.1^2)/length(diet.1$weight))+((sd.diet.2^2)/length(diet.2$weight)))
+CI<-c(diff-2*se.hat,diff+2*se.hat)
+
+
+
+wald_test=(mean(sampledata)-mu_hat)/sqrt(mean(sampledata/n))
+#Bayesian Analysis
+simu.mu=rnorm(1000,mean = mean(data1), sd = 1/sqrt(length(diet.1$weight)))
+hist(simu.mu, probability = T)
+
+mean.bayesian<-mean(simu.mu) 
